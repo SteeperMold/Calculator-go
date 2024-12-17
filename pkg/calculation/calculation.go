@@ -1,7 +1,6 @@
-package main
+package calculation
 
 import (
-	"fmt"
 	"strings"
 	"unicode"
 )
@@ -14,26 +13,29 @@ var precedence = map[rune]int{
 }
 
 func isExpressionValid(expression string) bool {
+	if strings.TrimSpace(expression) == "" {
+		return false
+	}
+
 	for _, r := range expression {
 		if !strings.ContainsRune("0123456789+-*/() ", r) {
 			return false
 		}
 	}
 
-	return true
+	return isParenthesisSequenceCorrect(expression)
 }
 
 func isParenthesisSequenceCorrect(expression string) bool {
-	var stack []int
+	var stack []rune
 
-	for index, r := range expression {
+	for _, r := range expression {
 		if r == '(' {
-			stack = append(stack, index)
+			stack = append(stack, r)
 		} else if r == ')' {
 			if len(stack) == 0 {
 				return false
 			}
-
 			stack = stack[:len(stack)-1]
 		}
 	}
@@ -41,7 +43,11 @@ func isParenthesisSequenceCorrect(expression string) bool {
 	return len(stack) == 0
 }
 
-func applyOperator(operators []rune, values []float64) ([]rune, []float64) {
+func applyOperator(operators []rune, values []float64) ([]rune, []float64, error) {
+	if len(values) < 2 || len(operators) == 0 {
+		return operators, values, ErrInvalidExpression
+	}
+
 	operator := operators[len(operators)-1]
 	left := values[len(values)-2]
 	right := values[len(values)-1]
@@ -58,81 +64,83 @@ func applyOperator(operators []rune, values []float64) ([]rune, []float64) {
 	case '*':
 		result = left * right
 	case '/':
+		if right == 0 {
+			return operators, values, ErrInvalidExpression
+		}
 		result = left / right
+	default:
+		return operators, values, ErrInvalidExpression
 	}
 
 	values = append(values, result)
-	return operators, values
+	return operators, values, nil
 }
 
-func Calc(expression string) (float64, error) {
+func Calculate(expression string) (float64, error) {
 	if !isExpressionValid(expression) {
-		return 0, fmt.Errorf("bad expression string")
-	}
-
-	if !isParenthesisSequenceCorrect(expression) {
-		return 0, fmt.Errorf("wrong parenthesis sequence")
-	}
-
-	if strings.TrimSpace(expression) == "" {
-		return 0, fmt.Errorf("empty expression")
+		return 0, ErrInvalidExpression
 	}
 
 	var operators []rune
 	var values []float64
 
-	for index, r := range expression {
+	for index := 0; index < len(expression); index++ {
+		r := rune(expression[index])
+
 		if r == ' ' {
 			continue
 		}
 
 		if unicode.IsDigit(r) {
 			number := 0
-
 			for index < len(expression) && unicode.IsDigit(rune(expression[index])) {
 				number = number*10 + int(expression[index]-'0')
 				index++
 			}
 			index--
-
 			values = append(values, float64(number))
 		} else if r == '(' {
 			operators = append(operators, r)
 		} else if r == ')' {
-			for operators[len(operators)-1] != '(' {
-				operators, values = applyOperator(operators, values)
+			for len(operators) > 0 && operators[len(operators)-1] != '(' {
+				var err error
+				operators, values, err = applyOperator(operators, values)
+				if err != nil {
+					return 0, err
+				}
 			}
 
+			if len(operators) == 0 {
+				return 0, ErrInvalidExpression
+			}
 			operators = operators[:len(operators)-1]
 		} else if strings.ContainsRune("+-/*", r) {
 			for len(operators) > 0 &&
 				operators[len(operators)-1] != '(' &&
 				precedence[operators[len(operators)-1]] >= precedence[r] {
-				operators, values = applyOperator(operators, values)
+				var err error
+				operators, values, err = applyOperator(operators, values)
+				if err != nil {
+					return 0, err
+				}
 			}
-
 			operators = append(operators, r)
+		} else {
+			return 0, ErrInvalidExpression
 		}
 	}
 
-	// Если операторов столько сколько нужно, то останется два числа и один оператор
-	if !(len(values) > len(operators)) {
-		return 0, fmt.Errorf("invalid operators")
+	for len(operators) > 0 {
+		var err error
+		operators, values, err = applyOperator(operators, values)
+		if err != nil {
+			return 0, err
+		}
 	}
 
-	for len(operators) > 0 {
-		operators, values = applyOperator(operators, values)
+	if len(values) != 1 {
+		return 0, ErrInvalidExpression
 	}
 
 	return values[0], nil
-}
-
-func main() {
-	res, err := Calc("2 + 2")
-
-	if err != nil {
-		fmt.Printf("failew with error: %v\n", err)
-	}
-
-	fmt.Printf("res = %v\n", res)
 }

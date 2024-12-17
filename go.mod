@@ -1,1 +1,1 @@
-module main
+module github.com/SteeperMold/Calculator-go
