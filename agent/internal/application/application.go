@@ -1,11 +1,11 @@
 package application
 
 type Application struct {
-	config *Config
+	Config *Config
 }
 
 func New() *Application {
 	return &Application{
-		config: NewConfigFromEnv(),
+		Config: NewConfigFromEnv(),
 	}
 }
