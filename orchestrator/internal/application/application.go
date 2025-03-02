@@ -20,10 +20,13 @@ func New() *Application {
 }
 
 func (a *Application) RunServer() {
-	log.Printf("Running on port %s", a.Config.Address)
-	http.HandleFunc("/api/v1/calculate", a.PostExpressionHandler)
-	http.HandleFunc("/api/v1/expressions/", a.GetExpressionHandler)
-	http.HandleFunc("/api/v1/expressions", a.ExpressionListHandler)
-	http.HandleFunc("/internal/task", a.TaskHandler)
-	log.Fatal(http.ListenAndServe(":"+a.Config.Address, nil))
+	log.Printf("Running on port %s", a.Config.Port)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/calculate", a.PostExpressionHandler)
+	mux.HandleFunc("/api/v1/expressions/", a.GetExpressionHandler)
+	mux.HandleFunc("/api/v1/expressions", a.ExpressionListHandler)
+	mux.HandleFunc("/internal/task", a.TaskHandler)
+
+	log.Fatal(http.ListenAndServe(":"+a.Config.Port, corsMiddleware(mux)))
 }

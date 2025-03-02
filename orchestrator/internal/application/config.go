@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Address              string
+	Port                 string
 	TimeAdditionMs       int
 	TimeSubtractionMs    int
 	TimeMultiplicationMs int
@@ -35,13 +35,13 @@ func NewConfigFromEnv() *Config {
 		log.Println(".env file not found, using os env vars or defaults")
 	}
 
-	address := os.Getenv("PORT")
-	if address == "" {
-		address = "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
 	return &Config{
-		Address:              address,
+		Port:                 port,
 		TimeAdditionMs:       getInt("TIME_ADDITION_MS", 1000),
 		TimeSubtractionMs:    getInt("TIME_SUBTRACTION_MS", 1000),
 		TimeMultiplicationMs: getInt("TIME_MULTIPLICATION_MS", 1000),
