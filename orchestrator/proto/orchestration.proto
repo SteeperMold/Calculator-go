@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package orchestration;
+option go_package = "github.com/SteeperMold/Calculator-go/proto";
+
+message GetTaskResponse {
+  int32 expression_id = 1;
+  int32 node_id = 2;
+  double arg1 = 3;
+  double arg2 = 4;
+  string operation = 5;
+  int32 operation_time = 6;
+}
+
+message PostTaskResult {
+  int32 expression_id = 1;
+  int32 node_id = 2;
+  double result = 3;
+}
+
+message Empty {}
+
+service Orchestrator {
+  rpc FetchTask (Empty) returns (GetTaskResponse);
+
+  rpc SendResult (PostTaskResult) returns (Empty);
+}
