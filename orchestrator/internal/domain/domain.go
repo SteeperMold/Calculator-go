@@ -1,6 +1,8 @@
 package domain
 
-import "errors"
+import (
+	"fmt"
+)
 
 const (
 	StatusInProgress   = "in-progress"
@@ -9,7 +11,7 @@ const (
 )
 
 var (
-	ErrInvalidExpression = errors.New("invalid expression")
+	ErrInvalidExpression = fmt.Errorf("invalid expression")
 )
 
 type Expression struct {
