@@ -1,75 +1,18 @@
 package application
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
+	pb "github.com/SteeperMold/Calculator-go/orchestrator/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"time"
 )
 
-type Task struct {
-	ExpressionID  int     `json:"expression_id"`
-	NodeID        int     `json:"node_id"`
-	Arg1          float64 `json:"arg1"`
-	Arg2          float64 `json:"arg2"`
-	Operation     string  `json:"operation"`
-	OperationTime int     `json:"operation_time"`
-}
-
-type TaskPayload struct {
-	Task Task `json:"task"`
-}
-
-func fetchTask(orchestratorAddress string) (*Task, error) {
-	apiEndpoint := fmt.Sprintf("%s/internal/task", orchestratorAddress)
-	resp, err := http.Get(apiEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, nil
-	}
-
-	var payload TaskPayload
-	err = json.NewDecoder(resp.Body).Decode(&payload)
-	if err != nil {
-		return nil, err
-	}
-
-	return &payload.Task, err
-}
-
-type Result struct {
-	ExpressionID int     `json:"expression_id"`
-	NodeID       int     `json:"node_id"`
-	Result       float64 `json:"result"`
-}
-
-func sendResult(result *Result, orchestratorAddress string) error {
-	data, err := json.Marshal(result)
-	if err != nil {
-		return err
-	}
-
-	apiEndpoint := fmt.Sprintf("%s/internal/task", orchestratorAddress)
-	resp, err := http.Post(apiEndpoint, "application/json", bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return nil
-}
-
-func processTask(task *Task) *Result {
+func processTask(task *pb.GetTaskResponse) *pb.PostTaskResult {
 	var result float64
 
 	switch task.Operation {
@@ -91,14 +34,14 @@ func processTask(task *Task) *Result {
 
 	time.Sleep(time.Duration(task.OperationTime) * time.Millisecond)
 
-	return &Result{
-		ExpressionID: task.ExpressionID,
-		NodeID:       task.NodeID,
+	return &pb.PostTaskResult{
+		ExpressionId: task.ExpressionId,
+		NodeId:       task.NodeId,
 		Result:       result,
 	}
 }
 
-func worker(ctx context.Context, config *Config, workerID int) {
+func worker(ctx context.Context, client pb.OrchestratorClient, workerID int) {
 	log.Printf("Worker %d started\n", workerID)
 	for {
 		select {
@@ -106,28 +49,38 @@ func worker(ctx context.Context, config *Config, workerID int) {
 			log.Printf("Worker %d finished\n", workerID)
 			return
 		default:
-			task, err := fetchTask(config.OrchestratorAddress)
-			if err != nil {
-				log.Printf("Worker %d failed to fetch task: %v\n", workerID, err)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			if task == nil {
-				log.Printf("Worker %d didn't get any tasks\n", workerID)
-				time.Sleep(1 * time.Second)
-				continue
-			}
+		}
 
-			result := processTask(task)
-			err = sendResult(result, config.OrchestratorAddress)
-			if err != nil {
-				log.Printf("Worker %d completed task %d", workerID, task.ExpressionID)
-			}
+		task, err := client.FetchTask(ctx, &pb.Empty{})
+		if err != nil {
+			log.Printf("Worker %d failed to fetch task: %v\n", workerID, err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		processedTask := processTask(task)
+
+		_, err = client.SendResult(ctx, processedTask)
+		if err != nil {
+			log.Printf("Worker %d failed to send result: %v\n", workerID, err)
+		} else {
+			log.Printf("Worker %d completed task %d", workerID, task.ExpressionId)
 		}
 	}
 }
 
 func (a *Application) RunDaemon() {
+	conn, err := grpc.NewClient(
+		a.Config.OrchestratorAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("failed to connect orchestrator: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewOrchestratorClient(conn)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -136,7 +89,7 @@ func (a *Application) RunDaemon() {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			worker(ctx, a.Config, id)
+			worker(ctx, client, id)
 		}(i)
 	}
 
@@ -147,5 +100,5 @@ func (a *Application) RunDaemon() {
 	log.Println("Interrupt received, shutting down...")
 	cancel()
 	wg.Wait()
-	log.Println("Turned off down successfully")
+	log.Println("Turned off successfully")
 }
