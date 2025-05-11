@@ -1,14 +1,14 @@
 import {useState} from "react";
-import axios from "axios";
 import {useNavigate} from "react-router";
 import {ReactComponent as LensSvg} from "./lens.svg";
+import Api from "../../api";
 
 const CalculatePage = () => {
   const navigate = useNavigate();
   const [expression, setExpression] = useState("");
   const [error, setError] = useState("");
 
-  const onClick = () => axios.post("http://localhost:8080/api/v1/calculate", {expression})
+  const onClick = () => Api.post("/calculate", {expression})
     .then(response => navigate(`/expressions/${response.data.id}`))
     .catch(error => setError(error.response.data));
 

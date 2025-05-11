@@ -23,12 +23,14 @@ const ExpressionsPage = () => {
 
   return (
     <div className="flex flex-col items-center">
+      <h1 className="text-2xl my-4">Список всех арифметических выражений</h1>
+
       <table className="w-1/2 border-collapse border border-gray-200">
         <thead>
         <tr>
-          <th className="border border-gray-200 px-4 py-2">ID</th>
-          <th className="border border-gray-200 px-4 py-2">Статус</th>
-          <th className="border border-gray-200 px-4 py-2">Результат</th>
+          <th className="border border-gray-200 px-4 py-2 w-1/3">ID</th>
+          <th className="border border-gray-200 px-4 py-2 w-1/3">Статус</th>
+          <th className="border border-gray-200 px-4 py-2 w-1/3">Результат</th>
         </tr>
         </thead>
         <tbody>
