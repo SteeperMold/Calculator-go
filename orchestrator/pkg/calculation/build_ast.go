@@ -1,7 +1,6 @@
 package calculation
 
 import (
-	"fmt"
 	"github.com/SteeperMold/Calculator-go/orchestrator/internal/domain"
 	"strconv"
 	"strings"
@@ -33,7 +32,7 @@ func tokenize(expr string) ([]string, error) {
 		}
 	}
 
-	for i, r := range expr {
+	for _, r := range expr {
 		switch {
 		case unicode.IsSpace(r):
 			flushNumber()
@@ -43,7 +42,7 @@ func tokenize(expr string) ([]string, error) {
 			flushNumber()
 			tokens = append(tokens, string(r))
 		default:
-			return nil, fmt.Errorf("unexpected character %q at position %d", r, i)
+			return nil, domain.ErrInvalidExpression
 		}
 	}
 	flushNumber()
@@ -107,16 +106,13 @@ func BuildAST(expression string) (*domain.Node, error) {
 		return nil, err
 	}
 
-	idCounter := 0
 	var stack []*domain.Node
 	for _, token := range rpn {
 		if _, err := strconv.ParseFloat(token, 64); err == nil {
 			stack = append(stack, &domain.Node{
 				Value:  token,
-				ID:     idCounter,
 				Status: domain.StatusInProgress,
 			})
-			idCounter++
 		} else if isOperator(token) {
 			if len(stack) < 2 {
 				return nil, domain.ErrInvalidExpression
@@ -128,10 +124,8 @@ func BuildAST(expression string) (*domain.Node, error) {
 				Value:  token,
 				Left:   left,
 				Right:  right,
-				ID:     idCounter,
 				Status: domain.StatusInProgress,
 			})
-			idCounter++
 		} else {
 			return nil, domain.ErrInvalidExpression
 		}

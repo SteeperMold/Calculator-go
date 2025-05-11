@@ -1,13 +1,18 @@
 package main
 
-import "github.com/SteeperMold/Calculator-go/orchestrator/internal/application"
+import (
+	"github.com/SteeperMold/Calculator-go/orchestrator/internal/api/grpcserver"
+	"github.com/SteeperMold/Calculator-go/orchestrator/internal/api/httpserver"
+	"github.com/SteeperMold/Calculator-go/orchestrator/internal/bootstrap"
+)
 
 func main() {
-	app := application.New()
+	app := bootstrap.NewApp()
+	defer app.CloseDatabase()
 
 	go func() {
-		app.RunHTTPServer()
+		grpcserver.RunGRPCServer(app.DB, app.Config)
 	}()
 
-	app.RunGRPCServer()
+	httpserver.RunHTTPServer(app.DB, app.Config)
 }

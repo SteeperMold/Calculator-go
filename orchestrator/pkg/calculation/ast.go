@@ -40,7 +40,7 @@ func getDeepestHelper(n *domain.Node, currentDepth int) (*domain.Node, int) {
 	return nil, currentDepth - 1
 }
 
-func GetDeepestInProgressOperation(n *domain.Node) (*domain.Node, bool) {
+func GetDeepestUnfinishedOperation(n *domain.Node) (*domain.Node, bool) {
 	node, _ := getDeepestHelper(n, 1)
 	if node == nil {
 		return nil, false
@@ -48,12 +48,12 @@ func GetDeepestInProgressOperation(n *domain.Node) (*domain.Node, bool) {
 	return node, true
 }
 
-func GetNodeByID(n *domain.Node, nodeID int) (*domain.Node, bool) {
+func GetNodeByID(n *domain.Node, nodeID int64) (*domain.Node, bool) {
 	if n == nil {
 		return nil, false
 	}
 
-	if n.ID == nodeID {
+	if n.Id == nodeID {
 		return n, true
 	}
 

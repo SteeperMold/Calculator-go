@@ -1,4 +1,9 @@
+github.com/SteeperMold/Calculator-go v0.1.0 h1:AWcVu5LMAZhvnzodL2yZs+53N3wlZEGJSt2L7NjIDFk=
+github.com/SteeperMold/Calculator-go v0.1.0/go.mod h1:/aBJe8FaaH2PrP9LZUjfOPQhGydU3jIoYJO5HU0GR7U=
+github.com/SteeperMold/Calculator-go/orchestrator v0.0.0-20250302155658-de8b73bdc172 h1:GeViDWjgE8HgOLXa46fQwnrLv9vxKvMA7u7fYu4qVn8=
 github.com/SteeperMold/Calculator-go/orchestrator v0.0.0-20250302155658-de8b73bdc172/go.mod h1:O+YFgjX+AqxfTWGkVQdu60rMsyJAzkXawUT9uPDzv8Q=
+github.com/SteeperMold/Calculator-go/orchestrator v0.0.0-20250509100503-b0241d3b9636 h1:i0pcer/HTgQbe0ln3RVczibOke2YMbgJ8RWHQb9+JS4=
+github.com/SteeperMold/Calculator-go/orchestrator v0.0.0-20250509100503-b0241d3b9636/go.mod h1:To/tpKp3551t2WY0Rc69FHWKYRK8/26SkPXb12ivaZs=
 github.com/go-logr/logr v1.4.2 h1:6pFjapn8bFcIbiKo3XT4j/BhANplGihG6tvd+8rYgrY=
 github.com/go-logr/logr v1.4.2/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
 github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=

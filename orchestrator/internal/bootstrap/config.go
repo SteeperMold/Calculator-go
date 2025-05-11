@@ -5,15 +5,21 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Config struct {
-	HTTPPort             string
-	GRPCPort             string
-	TimeAdditionMs       int
-	TimeSubtractionMs    int
-	TimeMultiplicationMs int
-	TimeDivisionMs       int
+	HTTPPort                string
+	GRPCPort                string
+	ContextTimeout          time.Duration
+	TimeAdditionMs          int
+	TimeSubtractionMs       int
+	TimeMultiplicationMs    int
+	TimeDivisionMs          int
+	AccessTokenSecret       string
+	AccessTokenExpiryHours  int
+	RefreshTokenSecret      string
+	RefreshTokenExpiryHours int
 }
 
 func getString(key string, defaultValue string) string {
@@ -46,11 +52,16 @@ func NewConfigFromEnv() *Config {
 	}
 
 	return &Config{
-		HTTPPort:             getString("HTTP_PORT", "8080"),
-		GRPCPort:             getString("GRPC_PORT", "50051"),
-		TimeAdditionMs:       getInt("TIME_ADDITION_MS", 1000),
-		TimeSubtractionMs:    getInt("TIME_SUBTRACTION_MS", 1000),
-		TimeMultiplicationMs: getInt("TIME_MULTIPLICATION_MS", 1000),
-		TimeDivisionMs:       getInt("TIME_DIVISION_MS", 1000),
+		HTTPPort:                getString("HTTP_PORT", "8080"),
+		GRPCPort:                getString("GRPC_PORT", "50051"),
+		ContextTimeout:          time.Duration(getInt("CONTEXT_TIMEOUT_MS", 2000)) * time.Millisecond,
+		TimeAdditionMs:          getInt("TIME_ADDITION_MS", 1000),
+		TimeSubtractionMs:       getInt("TIME_SUBTRACTION_MS", 1000),
+		TimeMultiplicationMs:    getInt("TIME_MULTIPLICATION_MS", 1000),
+		TimeDivisionMs:          getInt("TIME_DIVISION_MS", 1000),
+		AccessTokenSecret:       getString("ACCESS_TOKEN_SECRET", "not_very_secret"),
+		AccessTokenExpiryHours:  getInt("ACCESS_TOKEN_EXPIRY_HOURS", 2),
+		RefreshTokenSecret:      getString("REFRESH_TOKEN_SECRET", "not_very_secret"),
+		RefreshTokenExpiryHours: getInt("REFRESH_TOKEN_EXPIRY_HOURS", 720),
 	}
 }
